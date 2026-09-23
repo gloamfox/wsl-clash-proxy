@@ -43,6 +43,7 @@ ensure_config_dir() {
 
 # 写入 unset 语句（而非清空文件，因为 source 空文件不会清空已有变量）
 write_cleanup() {
+    ensure_config_dir
     cat > "${ENV_FILE}" <<'EOF'
 unset http_proxy
 unset https_proxy
@@ -73,6 +74,7 @@ is_proxy_alive() {
 }
 
 write_proxy() {
+    ensure_config_dir
     local port="${1:-$(resolve_port)}"
     cat > "${ENV_FILE}" <<EOF
 export http_proxy="http://127.0.0.1:${port}"
@@ -86,7 +88,6 @@ EOF
 }
 
 main() {
-    ensure_config_dir
     local port
     port="$(resolve_port)"
 
