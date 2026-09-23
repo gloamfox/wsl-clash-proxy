@@ -12,7 +12,7 @@ REPO        := gloamfox/wsl-clash-proxy
 PROXY_PORT  ?= 7897
 
 # 检查命令是否可用
-have := $(shell command -v $(1) 2>/dev/null)
+have = $(shell command -v $(1) 2>/dev/null)
 
 .PHONY: all install uninstall test lint
 
