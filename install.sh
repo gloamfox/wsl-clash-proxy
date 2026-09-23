@@ -23,8 +23,16 @@ _script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || echo ""
 if [[ ! -d "${_script_dir}/lib" ]] || [[ ! -d "${_script_dir}/bin" ]]; then
     echo "[INFO] 检测到独立运行，正在下载完整仓库 (${REPO}@${REF})..."
 
-    _tmpdir="$(mktemp -d)"
-    trap 'rm -rf "${_tmpdir}"' EXIT
+    _tmpdir="$(mktemp -d -t wsl-clash-proxy.XXXXXX)"
+    cleanup() {
+        if [[ -n "${_tmpdir:-}" && -d "${_tmpdir}" ]]; then
+            rm -rf "${_tmpdir}" || echo "[WARN] 清理临时目录失败: ${_tmpdir}" >&2
+        fi
+    }
+    trap cleanup EXIT
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
+    trap 'exit 129' HUP
 
     _archive_url="https://github.com/${REPO}/archive/refs/heads/${REF}.tar.gz"
 
