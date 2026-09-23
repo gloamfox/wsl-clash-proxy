@@ -41,7 +41,8 @@ if [[ ! -d "${_script_dir}/lib" ]] || [[ ! -d "${_script_dir}/bin" ]]; then
     # 传入环境变量以保证子流程使用相同的端口/版本
     export REF
     export PROXY_PORT="${PROXY_PORT:-7897}"
-    exec bash "${_tmpdir}/install.sh" "$@"
+    bash "${_tmpdir}/install.sh" "$@"
+    exit $?
 fi
 
 # ============================================================
