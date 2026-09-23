@@ -38,6 +38,9 @@ if [[ ! -d "${_script_dir}/lib" ]] || [[ ! -d "${_script_dir}/bin" ]]; then
     fi
 
     echo "[INFO] 仓库已下载，进入安装流程..."
+    # 传入环境变量以保证子流程使用相同的端口/版本
+    export REF
+    export PROXY_PORT="${PROXY_PORT:-7890}"
     exec bash "${_tmpdir}/install.sh" "$@"
 fi
 
@@ -48,6 +51,8 @@ readonly SCRIPT_DIR="${_script_dir}"
 readonly PROXY_PORT="${PROXY_PORT:-7890}"
 readonly INSTALL_DIR="/usr/local/bin"
 readonly SERVICE_NAME="proxy-watcher.service"
+readonly CONFIG_DIR="${HOME}/.config/wsl-clash-proxy"
+readonly CONF_FILE="${CONFIG_DIR}/proxy.conf"
 
 source "${SCRIPT_DIR}/lib/common.sh"
 
@@ -56,6 +61,17 @@ source "${SCRIPT_DIR}/lib/common.sh"
 # ------------------------------------------------------------
 check_prerequisites() {
     log_info "检查前置条件..."
+
+    # WSL2 环境校验
+    if ! grep -qiE 'microsoft|wsl' /proc/version 2>/dev/null; then
+        log_warn "未检测到 WSL 环境，请确认是在 WSL2 内运行。"
+    fi
+
+    # sudo 可用性校验
+    if ! has_command sudo; then
+        log_warn "未检测到 sudo，安装/清理系统脚本需要 sudo 权限。"
+        log_warn "建议先安装 sudo，或手动以 root 运行本脚本。"
+    fi
 
     if ! ps -p 1 -o comm= | grep -q systemd; then
         log_error "WSL 未启用 systemd。"
@@ -82,6 +98,19 @@ check_prerequisites() {
 }
 
 # ------------------------------------------------------------
+# 写入端口配置文件
+# ------------------------------------------------------------
+write_proxy_conf() {
+    log_info "写入端口配置文件 ${CONF_FILE}..."
+    mkdir -p "${CONFIG_DIR}"
+    cat > "${CONF_FILE}" <<EOF
+# WSL Clash Proxy 配置（由 install.sh 生成）
+PROXY_PORT=${PROXY_PORT}
+EOF
+    log_info "  端口配置完成"
+}
+
+# ------------------------------------------------------------
 # 部署脚本到 /usr/local/bin/
 # ------------------------------------------------------------
 deploy_binaries() {
@@ -90,11 +119,6 @@ deploy_binaries() {
     sudo install -m 755 "${SCRIPT_DIR}/bin/proxy-refresh.sh" "${INSTALL_DIR}/proxy-refresh.sh"
     sudo install -m 755 "${SCRIPT_DIR}/bin/proxy-watcher.sh" "${INSTALL_DIR}/proxy-watcher.sh"
     sudo install -m 755 "${SCRIPT_DIR}/bin/proxy-check.sh"   "${INSTALL_DIR}/proxy-check.sh"
-
-    # 用实际端口替换脚本中的默认端口
-    if [[ "${PROXY_PORT}" != "7890" ]]; then
-        sudo sed -i "s/PROXY_PORT:-7890/PROXY_PORT:-${PROXY_PORT}/" "${INSTALL_DIR}/proxy-refresh.sh"
-    fi
 
     log_info "  脚本部署完成"
 }
@@ -163,7 +187,7 @@ start_service_now() {
 # 验证
 # ------------------------------------------------------------
 verify() {
-    local env_file="${HOME}/.config/wsl-proxy.env"
+    local env_file="${CONFIG_DIR}/wsl-proxy.env"
     echo ""
     log_info "========== 验证 =========="
     sleep 3
@@ -201,6 +225,7 @@ main() {
     echo ""
 
     check_prerequisites
+    write_proxy_conf
     deploy_binaries
     deploy_systemd_unit
     inject_shell_config

@@ -8,7 +8,7 @@ WSL2 的 `autoProxy` 只在发行版启动时读取一次 Windows 代理设置�
 Clash 后启动时，WSL 内不会自动更新代理，必须 `wsl --shutdown` 重启才能生效。
 
 本项目通过一个后台 systemd 用户服务，每 3 秒检测一次 Clash 代理端口，
-把最新的代理环境变量写入 `~/.config/wsl-proxy.env`，shell 在每次提示符前自动加载。
+把最新的代理环境变量写入 `~/.config/wsl-clash-proxy/wsl-proxy.env`，shell 在每次提示符前自动加载。
 Clash 开启或关闭后，WSL 终端最多 3 秒内跟上。
 
 ## 前置条件
@@ -24,11 +24,13 @@ Clash 开启或关闭后，WSL 终端最多 3 秒内跟上。
 bash <(curl -sL https://raw.githubusercontent.com/gloamfox/wsl-clash-proxy/main/install.sh)
 ```
 
-自定义端口：
+自定义端口（安装时指定，写入 `~/.config/wsl-clash-proxy/proxy.conf`）：
 
 ```bash
 PROXY_PORT=7897 bash <(curl -sL https://raw.githubusercontent.com/gloamfox/wsl-clash-proxy/main/install.sh)
 ```
+
+端口优先级：环境变量 `PROXY_PORT` > 配置文件 `proxy.conf` > 默认 `7890`。
 
 固定版本：
 
@@ -60,7 +62,7 @@ curl -s -o /dev/null -w '%{http_code}' https://www.google.com
 ## 卸载
 
 ```bash
-bash <(curl -sL https://raw.githubusercontent.com/<你的用户名>/wsl-clash-proxy/main/uninstall.sh)
+bash <(curl -sL https://raw.githubusercontent.com/gloamfox/wsl-clash-proxy/main/uninstall.sh)
 ```
 
 ## 工作原理
@@ -72,9 +74,10 @@ bash <(curl -sL https://raw.githubusercontent.com/<你的用户名>/wsl-clash-pr
 └───────────┬─────────────┘                  └───────────────────────┘
             │ 写入
             ▼
-┌─────────────────────────┐     source       ┌───────────────────────┐
-│ ~/.config/wsl-proxy.env │ ───────────────▶ │ 交互式 Shell (bash/zsh)│
-└─────────────────────────┘                  └───────────────────────┘
+┌────────────────────────────────┐ source ┌───────────────────────┐
+│ ~/.config/wsl-clash-proxy/     │ ─────▶ │ 交互式 Shell (bash/zsh)│
+│   wsl-proxy.env                │        └───────────────────────┘
+└────────────────────────────────┘
 ```
 
 ## 目录说明
@@ -92,9 +95,17 @@ wsl-clash-proxy/
 │   └── proxy-check.sh            # 状态检查工具
 ├── config/
 │   └── proxy-watcher.service     # systemd 用户单元模板
-└── shell/
-    ├── bash-snippet.sh           # bash 自动加载片段
-    └── zsh-snippet.sh            # zsh 自动加载片段
+├── shell/
+│   ├── bash-snippet.sh           # bash 自动加载片段
+│   └── zsh-snippet.sh            # zsh 自动加载片段
+```
+
+安装后运行时产生的文件（位于用户主目录，非仓库）：
+
+```txt
+~/.config/wsl-clash-proxy/
+├── proxy.conf        # 代理端口配置（由 install.sh 生成）
+└── wsl-proxy.env     # 代理环境变量（由 proxy-refresh.sh 周期刷新）
 ```
 
 

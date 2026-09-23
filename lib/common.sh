@@ -11,9 +11,9 @@ readonly COLOR_YELLOW='\033[1;33m'
 readonly COLOR_RED='\033[0;31m'
 readonly COLOR_NC='\033[0m'
 
-log_info()  { echo -e "${COLOR_GREEN}[INFO]${NC} $*"; }
-log_warn()  { echo -e "${COLOR_YELLOW}[WARN]${NC} $*"; }
-log_error() { echo -e "${COLOR_RED}[ERROR]${NC} $*" >&2; }
+log_info()  { echo -e "${COLOR_GREEN}[INFO]${COLOR_NC} $*"; }
+log_warn()  { echo -e "${COLOR_YELLOW}[WARN]${COLOR_NC} $*"; }
+log_error() { echo -e "${COLOR_RED}[ERROR]${COLOR_NC} $*" >&2; }
 
 # 检查命令是否存在
 has_command() {

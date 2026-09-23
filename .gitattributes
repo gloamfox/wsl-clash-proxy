@@ -1,0 +1,9 @@
+# 强制所有文本文件使用 LF 换行，避免 Windows 编辑引入 CRLF 导致脚本崩溃
+* text=auto eol=lf
+
+# shell 脚本与配置明确标记为文本
+*.sh   text eol=lf
+*.service text eol=lf
+*.md   text eol=lf
+LICENSE text eol=lf
+.editorconfig text eol=lf

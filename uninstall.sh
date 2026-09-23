@@ -1,20 +1,21 @@
 #!/bin/bash
 # uninstall.sh — 卸载 WSL Clash Proxy
+#
+# 该脚本可独立运行（bash <(curl ...)），所有卸载逻辑内联，
+# 不依赖仓库文件即可清理系统脚本、systemd 单元与 shell 配置。
 
 set -euo pipefail
 IFS=$'\n\t'
 
 readonly SERVICE_NAME="proxy-watcher.service"
 readonly INSTALL_DIR="/usr/local/bin"
+readonly CONFIG_DIR="${HOME}/.config/wsl-clash-proxy"
+readonly ENV_FILE="${CONFIG_DIR}/wsl-proxy.env"
+readonly CONF_FILE="${CONFIG_DIR}/proxy.conf"
 
 _script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || echo "")"
 
-# 自举：若为独立运行则先下载完整仓库（用于清理 shell snippet 等）
-if [[ ! -f "${_script_dir}/lib/common.sh" ]]; then
-    echo "[INFO] 独立运行，使用内联逻辑执行卸载。"
-    # 独立运行时无法读取 shell snippet 文件，改为直接 sed 清理
-fi
-
+# 优先复用公共函数库；独立运行时提供内联兜底
 if [[ -f "${_script_dir}/lib/common.sh" ]]; then
     source "${_script_dir}/lib/common.sh"
 else
@@ -46,8 +47,9 @@ sudo rm -f "${INSTALL_DIR}/proxy-refresh.sh" \
             "${INSTALL_DIR}/proxy-check.sh"
 log_info "  脚本已删除"
 
-log_info "删除环境变量文件..."
-rm -f "${HOME}/.config/wsl-proxy.env"
+log_info "删除配置文件..."
+rm -f "${ENV_FILE}" "${CONF_FILE}"
+rmdir "${CONFIG_DIR}" 2>/dev/null || true
 log_info "  配置文件已删除"
 
 log_info "清理 shell 配置..."

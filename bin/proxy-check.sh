@@ -4,13 +4,41 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-readonly ENV_FILE="${HOME}/.config/wsl-proxy.env"
+readonly CONFIG_DIR="${HOME}/.config/wsl-clash-proxy"
+readonly CONF_FILE="${CONFIG_DIR}/proxy.conf"
+readonly ENV_FILE="${CONFIG_DIR}/wsl-proxy.env"
 readonly SERVICE_NAME="proxy-watcher.service"
 readonly TEST_URL="http://www.gstatic.com/generate_204"
+readonly DEFAULT_PORT="7890"
+
+# 解析代理端口：优先取当前 shell 环境变量，其次配置文件，最后默认值
+resolve_port() {
+    if [[ -n "${http_proxy:-}" ]]; then
+        local port="${http_proxy##*:}"
+        port="${port%%/*}"
+        if [[ -n "${port}" ]]; then
+            echo "${port}"
+            return 0
+        fi
+    fi
+    if [[ -f "${CONF_FILE}" ]]; then
+        local conf_port
+        conf_port="$(grep -E '^[[:space:]]*PROXY_PORT=[0-9]+' "${CONF_FILE}" | tail -1 | cut -d= -f2-)"
+        if [[ -n "${conf_port}" ]]; then
+            echo "${conf_port}"
+            return 0
+        fi
+    fi
+    echo "${DEFAULT_PORT}"
+}
+
+PORT="$(resolve_port)"
 
 echo "========================================"
 echo " WSL Clash Proxy 状态检查"
 echo "========================================"
+echo ""
+echo "  当前探测端口: ${PORT}"
 echo ""
 
 echo "[1] 环境变量："
@@ -36,9 +64,6 @@ systemctl --user status "${SERVICE_NAME}" --no-pager 2>/dev/null | head -5 | sed
 echo ""
 
 echo "[4] 代理连通性测试："
-PORT="${http_proxy##*:}"
-PORT="${PORT%%/*}"
-PORT="${PORT:-7890}"
 HTTP_CODE="$(curl -s -o /dev/null -w '%{http_code}' --connect-timeout 3 \
     -x "http://127.0.0.1:${PORT}" \
     "${TEST_URL}" 2>/dev/null || echo "000")"
