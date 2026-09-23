@@ -24,10 +24,12 @@ has_command() {
 # 兼容 sudo 丢失环境变量或通过非交互式 shell 调用的情况
 resolve_runtime_dir() {
     if [[ -z "${XDG_RUNTIME_DIR:-}" ]]; then
-        export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+        XDG_RUNTIME_DIR="/run/user/$(id -u)"
+        export XDG_RUNTIME_DIR
     fi
     if [[ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ]] && [[ -S "${XDG_RUNTIME_DIR}/bus" ]]; then
-        export DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR}/bus"
+        DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR}/bus"
+        export DBUS_SESSION_BUS_ADDRESS
     fi
 }
 

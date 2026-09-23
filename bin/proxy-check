@@ -13,7 +13,7 @@ _locate_common() {
         echo "$(cd "$(dirname "${BASH_SOURCE[0]}")/../lib" 2>/dev/null && pwd)/common.sh"
     fi
 }
-
+# shellcheck disable=SC1090
 source "$(_locate_common)"
 
 readonly CONFIG_DIR="${HOME}/.config/wsl-clash-proxy"

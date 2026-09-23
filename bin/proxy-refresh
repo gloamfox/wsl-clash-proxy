@@ -22,6 +22,7 @@ _locate_common() {
     fi
 }
 
+# shellcheck disable=SC1090
 source "$(_locate_common)"
 
 readonly CONFIG_DIR="${HOME}/.config/wsl-clash-proxy"
