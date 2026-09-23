@@ -38,18 +38,18 @@ PROXY_PORT=7897 bash <(curl -sL https://raw.githubusercontent.com/gloamfox/wsl-c
 REF=v1.0.0 bash <(curl -sL https://raw.githubusercontent.com/gloamfox/wsl-clash-proxy/main/install.sh)
 ```
 
-## 手动安装
+## 手动安装（或开发）
 
 ```bash
 git clone https://github.com/gloamfox/wsl-clash-proxy.git
 cd wsl-clash-proxy
-bash install.sh
+make install          # 或 bash install.sh
 ```
 
 ## 验证
 
 ```bash
-proxy-check.sh
+proxy-check
 ```
 
 或：
@@ -63,6 +63,15 @@ curl -s -o /dev/null -w '%{http_code}' https://www.google.com
 
 ```bash
 bash <(curl -sL https://raw.githubusercontent.com/gloamfox/wsl-clash-proxy/main/uninstall.sh)
+```
+
+本地卸载：`make uninstall`
+
+## 开发
+
+```bash
+make test      # 运行 bats 单元测试
+make lint      # shellcheck 静态检查
 ```
 
 ## 工作原理
@@ -85,19 +94,23 @@ bash <(curl -sL https://raw.githubusercontent.com/gloamfox/wsl-clash-proxy/main/
 wsl-clash-proxy/
 ├── README.md
 ├── LICENSE
+├── Makefile                      # 统一入口（install/uninstall/test/lint）
 ├── install.sh                    # 入口脚本，带自举逻辑
 ├── uninstall.sh                  # 卸载脚本
 ├── lib/
-│   └── common.sh                 # 公共函数（日志、颜色、环境解析）
+│   └── common.sh                 # 公共函数（日志、颜色、端口解析）
 ├── bin/
-│   ├── proxy-refresh.sh          # 核心：探测 + 写环境变量文件
-│   ├── proxy-watcher.sh          # 循环调度 proxy-refresh.sh
-│   └── proxy-check.sh            # 状态检查工具
-├── config/
+│   ├── proxy-refresh             # 核心：探测 + 写环境变量文件
+│   ├── proxy-watcher             # 循环调度 proxy-refresh
+│   └── proxy-check               # 状态检查工具
+├── systemd/
 │   └── proxy-watcher.service     # systemd 用户单元模板
 ├── shell/
 │   ├── bash-snippet.sh           # bash 自动加载片段
 │   └── zsh-snippet.sh            # zsh 自动加载片段
+└── tests/
+    ├── common.bats               # 端口解析单元测试
+    └── proxy-refresh.bats        # 环境变量文件写入测试
 ```
 
 安装后运行时产生的文件（位于用户主目录，非仓库）：
@@ -105,7 +118,7 @@ wsl-clash-proxy/
 ```txt
 ~/.config/wsl-clash-proxy/
 ├── proxy.conf        # 代理端口配置（由 install.sh 生成）
-└── wsl-proxy.env     # 代理环境变量（由 proxy-refresh.sh 周期刷新）
+└── wsl-proxy.env     # 代理环境变量（由 proxy-refresh 周期刷新）
 ```
 
 

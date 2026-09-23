@@ -1,7 +1,7 @@
 #!/bin/bash
-# proxy-refresh.sh — 探测 Clash 代理可用性，刷新当前用户的代理环境变量文件
+# proxy-refresh — 探测 Clash 代理可用性，刷新当前用户的代理环境变量文件
 #
-# Usage: proxy-refresh.sh
+# Usage: proxy-refresh
 # Env:   PROXY_PORT   Clash 混合端口（可选，覆盖配置文件）
 # Exit:  0  始终成功（用于 systemd 循环调用）
 #
@@ -12,34 +12,33 @@
 set -euo pipefail
 IFS=$'\n\t'
 
+# 定位公共库：优先安装后的系统路径，其次仓库相对路径（开发/测试场景）
+_locate_common() {
+    local sys_lib="/usr/local/lib/wsl-clash-proxy/lib/common.sh"
+    if [[ -f "${sys_lib}" ]]; then
+        echo "${sys_lib}"
+    else
+        echo "$(cd "$(dirname "${BASH_SOURCE[0]}")/../lib" 2>/dev/null && pwd)/common.sh"
+    fi
+}
+
+source "$(_locate_common)"
+
 readonly CONFIG_DIR="${HOME}/.config/wsl-clash-proxy"
 readonly CONF_FILE="${CONFIG_DIR}/proxy.conf"
 readonly ENV_FILE="${CONFIG_DIR}/wsl-proxy.env"
-readonly DEFAULT_PORT="7897"
 readonly TEST_URL="http://www.gstatic.com/generate_204"
 readonly CONNECT_TIMEOUT=2
 
-# 解析代理端口：环境变量覆盖 > 配置文件 > 默认值
+# 解析代理端口（复用公共库）
 resolve_port() {
-    if [[ -n "${PROXY_PORT:-}" ]]; then
-        echo "${PROXY_PORT}"
-        return 0
-    fi
-    if [[ -f "${CONF_FILE}" ]]; then
-        local port
-        port="$(grep -E '^[[:space:]]*PROXY_PORT=[0-9]+' "${CONF_FILE}" | tail -1 | cut -d= -f2-)"
-        if [[ -n "${port}" ]]; then
-            echo "${port}"
-            return 0
-        fi
-    fi
-    echo "${DEFAULT_PORT}"
+    resolve_proxy_port "${PROXY_PORT:-}" "${CONF_FILE}" "7897"
 }
 
-readonly PORT="$(resolve_port)"
-
-# 确保父目录存在
-mkdir -p "${CONFIG_DIR}"
+# 确保状态目录存在
+ensure_config_dir() {
+    mkdir -p "${CONFIG_DIR}"
+}
 
 # 写入 unset 语句（而非清空文件，因为 source 空文件不会清空已有变量）
 write_cleanup() {
@@ -57,37 +56,47 @@ EOF
 # 优先用 nc 做轻量 TCP 探测，避免 systemd 每 3 秒发起一次完整 HTTP 请求；
 # 仅在缺少 nc 时才回退到 curl 实际请求验证。
 is_proxy_alive() {
+    local port="${1:-$(resolve_port)}"
+
     if command -v nc &>/dev/null; then
-        nc -z -w "${CONNECT_TIMEOUT}" 127.0.0.1 "${PORT}" 2>/dev/null
+        nc -z -w "${CONNECT_TIMEOUT}" 127.0.0.1 "${port}" 2>/dev/null
         return
     fi
 
     local http_code
     http_code="$(curl -s -o /dev/null -w '%{http_code}' \
         --connect-timeout "${CONNECT_TIMEOUT}" \
-        -x "http://127.0.0.1:${PORT}" \
+        -x "http://127.0.0.1:${port}" \
         "${TEST_URL}" 2>/dev/null || echo "000")"
     [[ "${http_code}" == "204" || "${http_code}" == "200" ]]
 }
 
 write_proxy() {
+    local port="${1:-$(resolve_port)}"
     cat > "${ENV_FILE}" <<EOF
-export http_proxy="http://127.0.0.1:${PORT}"
-export https_proxy="http://127.0.0.1:${PORT}"
-export HTTP_PROXY="http://127.0.0.1:${PORT}"
-export HTTPS_PROXY="http://127.0.0.1:${PORT}"
-export all_proxy="socks5://127.0.0.1:${PORT}"
-export ALL_PROXY="socks5://127.0.0.1:${PORT}"
+export http_proxy="http://127.0.0.1:${port}"
+export https_proxy="http://127.0.0.1:${port}"
+export HTTP_PROXY="http://127.0.0.1:${port}"
+export HTTPS_PROXY="http://127.0.0.1:${port}"
+export all_proxy="socks5://127.0.0.1:${port}"
+export ALL_PROXY="socks5://127.0.0.1:${port}"
 export no_proxy="localhost,127.0.0.1,::1"
 EOF
 }
 
 main() {
-    if is_proxy_alive; then
-        write_proxy
+    ensure_config_dir
+    local port
+    port="$(resolve_port)"
+
+    if is_proxy_alive "${port}"; then
+        write_proxy "${port}"
     else
         write_cleanup
     fi
 }
 
-main "$@"
+# 允许被 source 复用（测试等场景）
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi

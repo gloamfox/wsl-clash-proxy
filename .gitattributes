@@ -2,8 +2,12 @@
 * text=auto eol=lf
 
 # shell 脚本与配置明确标记为文本
-*.sh   text eol=lf
-*.service text eol=lf
-*.md   text eol=lf
-LICENSE text eol=lf
+*.sh         text eol=lf
+*.service    text eol=lf
+*.md         text eol=lf
+LICENSE      text eol=lf
 .editorconfig text eol=lf
+
+# 无扩展名的可执行脚本（bin/ 目录）强制 LF
+bin/*        text eol=lf
+Makefile     text eol=lf

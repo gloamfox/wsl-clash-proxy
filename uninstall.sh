@@ -9,6 +9,7 @@ IFS=$'\n\t'
 
 readonly SERVICE_NAME="proxy-watcher.service"
 readonly INSTALL_DIR="/usr/local/bin"
+readonly LIB_DIR="/usr/local/lib/wsl-clash-proxy"
 readonly CONFIG_DIR="${HOME}/.config/wsl-clash-proxy"
 readonly ENV_FILE="${CONFIG_DIR}/wsl-proxy.env"
 readonly CONF_FILE="${CONFIG_DIR}/proxy.conf"
@@ -42,9 +43,10 @@ sudo rm -f "/etc/systemd/user/default.target.wants/${SERVICE_NAME}"
 log_info "  单元已删除"
 
 log_info "删除脚本..."
-sudo rm -f "${INSTALL_DIR}/proxy-refresh.sh" \
-            "${INSTALL_DIR}/proxy-watcher.sh" \
-            "${INSTALL_DIR}/proxy-check.sh"
+sudo rm -f "${INSTALL_DIR}/proxy-refresh" \
+            "${INSTALL_DIR}/proxy-watcher" \
+            "${INSTALL_DIR}/proxy-check"
+sudo rm -rf "${LIB_DIR}"
 log_info "  脚本已删除"
 
 log_info "删除配置文件..."

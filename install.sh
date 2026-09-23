@@ -50,6 +50,7 @@ fi
 readonly SCRIPT_DIR="${_script_dir}"
 readonly PROXY_PORT="${PROXY_PORT:-7897}"
 readonly INSTALL_DIR="/usr/local/bin"
+readonly LIB_DIR="/usr/local/lib/wsl-clash-proxy/lib"
 readonly SERVICE_NAME="proxy-watcher.service"
 readonly CONFIG_DIR="${HOME}/.config/wsl-clash-proxy"
 readonly CONF_FILE="${CONFIG_DIR}/proxy.conf"
@@ -111,14 +112,16 @@ EOF
 }
 
 # ------------------------------------------------------------
-# 部署脚本到 /usr/local/bin/
+# 部署脚本到 /usr/local/bin/ 与 /usr/local/lib/
 # ------------------------------------------------------------
-deploy_binaries() {
-    log_info "部署脚本到 ${INSTALL_DIR}/..."
+deploy_scripts() {
+    log_info "部署脚本..."
 
-    sudo install -m 755 "${SCRIPT_DIR}/bin/proxy-refresh.sh" "${INSTALL_DIR}/proxy-refresh.sh"
-    sudo install -m 755 "${SCRIPT_DIR}/bin/proxy-watcher.sh" "${INSTALL_DIR}/proxy-watcher.sh"
-    sudo install -m 755 "${SCRIPT_DIR}/bin/proxy-check.sh"   "${INSTALL_DIR}/proxy-check.sh"
+    sudo mkdir -p "${INSTALL_DIR}" "${LIB_DIR}"
+    sudo install -m 755 "${SCRIPT_DIR}/bin/proxy-refresh"  "${INSTALL_DIR}/proxy-refresh"
+    sudo install -m 755 "${SCRIPT_DIR}/bin/proxy-watcher" "${INSTALL_DIR}/proxy-watcher"
+    sudo install -m 755 "${SCRIPT_DIR}/bin/proxy-check"   "${INSTALL_DIR}/proxy-check"
+    sudo install -m 644 "${SCRIPT_DIR}/lib/common.sh"     "${LIB_DIR}/common.sh"
 
     log_info "  脚本部署完成"
 }
@@ -130,7 +133,7 @@ deploy_systemd_unit() {
     log_info "部署 systemd 用户单元到 /etc/systemd/user/..."
 
     sudo mkdir -p /etc/systemd/user
-    sudo install -m 644 "${SCRIPT_DIR}/config/proxy-watcher.service" \
+    sudo install -m 644 "${SCRIPT_DIR}/systemd/proxy-watcher.service" \
         "/etc/systemd/user/${SERVICE_NAME}"
 
     sudo systemctl --global enable "${SERVICE_NAME}" 2>/dev/null || true
@@ -208,7 +211,7 @@ verify() {
     echo ""
     echo "  下一步："
     echo "    1. 新开终端，或执行 source ~/.bashrc / source ~/.zshrc"
-    echo "    2. 运行 proxy-check.sh 查看代理状态"
+    echo "    2. 运行 proxy-check 查看代理状态"
     echo "    3. 确保 Clash Verge 已开启 Allow LAN"
     echo ""
 }
@@ -226,7 +229,7 @@ main() {
 
     check_prerequisites
     write_proxy_conf
-    deploy_binaries
+    deploy_scripts
     deploy_systemd_unit
     inject_shell_config
     start_service_now

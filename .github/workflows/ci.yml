@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 安装 ShellCheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - name: 运行 ShellCheck
+        run: shellcheck install.sh uninstall.sh lib/*.sh bin/* shell/*.sh
+
+  test:
+    name: bats 单元测试
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 安装 bats-core
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bats
+      - name: 运行测试
+        run: bats tests/

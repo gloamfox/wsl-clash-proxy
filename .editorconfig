@@ -7,7 +7,12 @@ end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true
 
+# shell 脚本（含 bin/ 下无扩展名可执行脚本）
 [*.sh]
+indent_style = space
+indent_size = 4
+
+[bin/*]
 indent_style = space
 indent_size = 4
 

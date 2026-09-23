@@ -30,3 +30,31 @@ resolve_runtime_dir() {
         export DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR}/bus"
     fi
 }
+
+# 解析代理端口：环境变量 PROXY_PORT > 配置文件 > 默认端口
+#
+# 参数（均可选，用于测试注入）：
+#   $1  环境变量端口覆盖值（默认取 ${PROXY_PORT}）
+#   $2  配置文件路径（默认 ${HOME}/.config/wsl-clash-proxy/proxy.conf）
+#   $3  兜底默认端口（默认 7897）
+resolve_proxy_port() {
+    local env_port="${1:-${PROXY_PORT:-}}"
+    local conf_file="${2:-${HOME}/.config/wsl-clash-proxy/proxy.conf}"
+    local default_port="${3:-7897}"
+
+    if [[ -n "${env_port}" ]]; then
+        echo "${env_port}"
+        return 0
+    fi
+
+    if [[ -f "${conf_file}" ]]; then
+        local port
+        port="$(grep -E '^[[:space:]]*PROXY_PORT=[0-9]+' "${conf_file}" | tail -1 | cut -d= -f2-)"
+        if [[ -n "${port}" ]]; then
+            echo "${port}"
+            return 0
+        fi
+    fi
+
+    echo "${default_port}"
+}
