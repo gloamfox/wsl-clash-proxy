@@ -1,5 +1,3 @@
-# shellcheck shell=bash
-# shellcheck disable=SC1091
 # ===== WSL Clash Proxy Auto-Load (managed by wsl-clash-proxy) =====
 [ -f "$HOME/.config/wsl-clash-proxy/wsl-proxy.env" ] && source "$HOME/.config/wsl-clash-proxy/wsl-proxy.env"
 
