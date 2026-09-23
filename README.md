@@ -30,7 +30,7 @@ bash <(curl -sL https://raw.githubusercontent.com/gloamfox/wsl-clash-proxy/main/
 PROXY_PORT=7897 bash <(curl -sL https://raw.githubusercontent.com/gloamfox/wsl-clash-proxy/main/install.sh)
 ```
 
-端口优先级：环境变量 `PROXY_PORT` > 配置文件 `proxy.conf` > 默认 `7890`。
+端口优先级：环境变量 `PROXY_PORT` > 配置文件 `proxy.conf` > 默认 `7897`。
 
 固定版本：
 

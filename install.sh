@@ -2,7 +2,7 @@
 # install.sh — WSL Clash Proxy 一键安装
 #
 # Usage: bash install.sh
-# Env:   PROXY_PORT   Clash 混合端口（默认 7890）
+# Env:   PROXY_PORT   Clash 混合端口（默认 7897）
 #        REF          安装版本/分支（默认 main）
 #
 # 该脚本支持自举：既可以通过 git clone 后执行，也可以直接
@@ -40,7 +40,7 @@ if [[ ! -d "${_script_dir}/lib" ]] || [[ ! -d "${_script_dir}/bin" ]]; then
     echo "[INFO] 仓库已下载，进入安装流程..."
     # 传入环境变量以保证子流程使用相同的端口/版本
     export REF
-    export PROXY_PORT="${PROXY_PORT:-7890}"
+    export PROXY_PORT="${PROXY_PORT:-7897}"
     exec bash "${_tmpdir}/install.sh" "$@"
 fi
 
@@ -48,7 +48,7 @@ fi
 # 正常安装逻辑
 # ============================================================
 readonly SCRIPT_DIR="${_script_dir}"
-readonly PROXY_PORT="${PROXY_PORT:-7890}"
+readonly PROXY_PORT="${PROXY_PORT:-7897}"
 readonly INSTALL_DIR="/usr/local/bin"
 readonly SERVICE_NAME="proxy-watcher.service"
 readonly CONFIG_DIR="${HOME}/.config/wsl-clash-proxy"

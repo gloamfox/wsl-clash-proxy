@@ -9,7 +9,7 @@ readonly CONF_FILE="${CONFIG_DIR}/proxy.conf"
 readonly ENV_FILE="${CONFIG_DIR}/wsl-proxy.env"
 readonly SERVICE_NAME="proxy-watcher.service"
 readonly TEST_URL="http://www.gstatic.com/generate_204"
-readonly DEFAULT_PORT="7890"
+readonly DEFAULT_PORT="7897"
 
 # 解析代理端口：优先取当前 shell 环境变量，其次配置文件，最后默认值
 resolve_port() {

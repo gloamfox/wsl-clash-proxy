@@ -7,7 +7,7 @@
 #
 # 代理可用时写入 export 语句；不可用时写入 unset 语句，
 # 确保已打开的 shell 加载该文件后能正确清空旧代理变量。
-# 端口优先级：环境变量 PROXY_PORT > 配置文件 > 默认 7890。
+# 端口优先级：环境变量 PROXY_PORT > 配置文件 > 默认 7897。
 
 set -euo pipefail
 IFS=$'\n\t'
@@ -15,7 +15,7 @@ IFS=$'\n\t'
 readonly CONFIG_DIR="${HOME}/.config/wsl-clash-proxy"
 readonly CONF_FILE="${CONFIG_DIR}/proxy.conf"
 readonly ENV_FILE="${CONFIG_DIR}/wsl-proxy.env"
-readonly DEFAULT_PORT="7890"
+readonly DEFAULT_PORT="7897"
 readonly TEST_URL="http://www.gstatic.com/generate_204"
 readonly CONNECT_TIMEOUT=2
 
