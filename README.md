@@ -124,4 +124,4 @@ wsl-clash-proxy/
 
 ## License
 
-MIT
+[MIT](LICENSE)
