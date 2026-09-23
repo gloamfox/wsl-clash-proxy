@@ -16,7 +16,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y shellcheck
       - name: 运行 ShellCheck
         run: |
-          shellcheck install.sh uninstall.sh lib/*.sh bin/* shell/*.sh
+          shellcheck install.sh uninstall.sh lib/*.sh bin/*
           shellcheck -s bash -e SC1091 shell/bash-snippet.sh shell/zsh-snippet.sh
 
   test:
